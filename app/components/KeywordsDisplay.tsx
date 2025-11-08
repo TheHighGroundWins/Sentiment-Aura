@@ -17,10 +17,10 @@ const KeywordsDisplay = ({keywords}: {keywords: String[]}) => {
 
 
   return (
-    <div className='flex gap-1' key={hashArray(keywords)}>
-    {[...keywords].map((word, i) => (<h2 key={i} className='animate-FadeIn' 
-    style={{animationIterationCount: 1, animationFillMode: "both", animationDelay: `${i*0.05}s`, animationDuration: '2s'}}>{word}</h2>))}
-    </div>
+    <p className={`${keywords.length > 0 ? "opacity-80":"opacity-0"} backdrop-blur-xl rounded-full bg-[#33415566] p-4`} key={hashArray(keywords)}>
+    {[...keywords].map((word, i) => (<span key={i} className='animate-FadeIn'
+    style={{animationIterationCount: 1, animationFillMode: "both", animationDelay: `${i*0.05}s`, animationDuration: '2s'}}>{word}</span>))}
+    </p>
   )
 }
 

@@ -1,9 +1,9 @@
 import React from 'react'
 
-const TranscriptDisplay = () => {
+const TranscriptDisplay = ({transcript}: {transcript: string}) => {
   return (
-    <div className='bg-opacity-20 backdrop-blur-lg rounded-2xl'>
-        <p>transcription text</p>
+    <div className={`${transcript.length > 0 ? "opacity-80":"opacity-0"} backdrop-blur-3xl rounded-2xl bg-[#33415566] mt-5 ml-10 mr-10 p-5 animate-FadeIn`}>
+        <p>{transcript}</p>
     </div>
   )
 }

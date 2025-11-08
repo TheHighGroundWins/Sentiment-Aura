@@ -9,7 +9,13 @@ const UIOverlay = () => {
 
   const[keywordList, setKeywords] = useState([""]);
   const [words, setWords] = useState<string[]>([]);
+  const [transcript, setTranscript] = useState("");
 
+
+
+
+
+  
   const updateKeywords = () => {
       setKeywords(words)
     }
@@ -20,13 +26,12 @@ const UIOverlay = () => {
 
   return (
     <div className='relative'>
-        <AudioVisual />
-        
-        <div className='absolute flex flex-col text-2xl gap-10'>
+        <AudioVisual/>
+        <div className='absolute inset-0 top-1/2 flex flex-col text-2xl gap-4 justify-center items-center'>
             
-            <TranscriptDisplay/>
+            <TranscriptDisplay transcript={transcript}/>
             <KeywordsDisplay keywords={keywordList}/>
-            <Controls/>
+            <Controls setTranscript={setTranscript}/>
             <input onChange={inputKeywords}></input>
             <button onClick={updateKeywords}>button</button>
         </div>
