@@ -2,23 +2,58 @@
 import React, { useEffect, useRef } from "react";
 import p5 from "p5";
 
-export default function AudioVisual() {
-  const containerRef = useRef<HTMLDivElement>(null);
+export interface sentimentData {
+    happy: number,
+    sad: number,
+    angry: number,
+    surprised: number,
+    arousal: number,
+    valence: number
+}
 
+function emotionToHSV(value: number, min=0,max=10) {
+    const normalized = (value - min) / (max - min);
+  
+  let hue;
+  if (normalized < 0.5) {
+    // 0 to 0.5: Blue (240°) → Cyan (180°)
+    hue = 240 - (normalized * 2 * 60);
+  } else {
+    // 0.5 to 1: Yellow (60°) → Red (0°)
+    hue = 60 - ((normalized - 0.5) * 2 * 60);
+  }
+
+  return hue;
+}
+
+export default function AudioVisual({sentiments}: {sentiments: sentimentData}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  
   useEffect(() => {
     if (!containerRef.current) return;
 
     import("p5").then((p5Mod)=>{
     const p5 = p5Mod.default;
+
     const particleNum = 500;
 
     let delta = 0;
-    let baseHue = [200, 250, 300];
-    let hueRange = 40;
+    let baseHue: number[] = [];
+    let hueRange: number[] = [];
     let baseSat = [100, 100, 100];
     let satRange = 0;
     let scale = 3;
     let noiseScale = 0.002;
+    let brightness = 100;
+
+    if(sentiments==null) {
+      return
+    }
+
+    for (let impact = 0; impact < (sentiments.arousal/2); impact++) {
+      baseHue.push(emotionToHSV(sentiments.happy-sentiments.sad+sentiments.angry)+50*impact);
+      baseSat.push(100);
+    }
     
     let speed = 2;
     const offset = {x:1000, y:1000}
@@ -77,7 +112,7 @@ export default function AudioVisual() {
           par.x += Math.cos(a)*speed;
           par.y += Math.sin(a)*speed;
 
-          p.stroke(hue, sat, 100, 100)
+          p.stroke(hue, sat, brightness, 100)
           p.point(par.x,par.y);
 
           
@@ -119,7 +154,7 @@ export default function AudioVisual() {
       canvas.remove();
     };});
     
-  }, []);
+  }, [sentiments]);
 
   return (
     <div className="border border-gray-400" ref={containerRef}></div>
