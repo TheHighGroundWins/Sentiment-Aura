@@ -75,7 +75,6 @@ const UIOverlay = () => {
             <TranscriptDisplay transcript={transcript}/>
             <KeywordsDisplay keywords={keywordList}/>
             <Controls setTranscript={setTranscript}/>
-            <button onClick={callServer}>button</button>
         </div>
     </div>
   )
