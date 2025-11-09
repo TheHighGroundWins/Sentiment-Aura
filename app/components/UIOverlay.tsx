@@ -45,7 +45,7 @@ const UIOverlay = () => {
 
   const callServer = async () => {
     
-    const response = await axios.post('ai-sentiment-server.duckdns.org/process_text',
+    const response = await axios.post('https://ai-sentiment-server.duckdns.org/process_text',
       {
         message: `sentimental analysis (scale 0-10 happy, sad, angry, surprised, arousal, valence(binary value of -1 or 1)) and keywords (5 maximum), give pure JSON Data: ${transcript.text}`
       },
