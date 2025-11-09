@@ -45,7 +45,7 @@ const UIOverlay = () => {
 
   const callServer = async () => {
     
-    const response = await axios.post('http://localhost:3001/process_text',
+    const response = await axios.post('http://ec2-18-223-235-254.us-east-2.compute.amazonaws.com:3001/process_text',
       {
         message: `sentimental analysis (scale 0-10 happy, sad, angry, surprised, arousal, valence(binary value of -1 or 1)) and keywords (5 maximum), give pure JSON Data: ${transcript.text}`
       },
