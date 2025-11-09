@@ -2,7 +2,8 @@ require("dotenv").config();
 const express = require('express');
 const cors = require("cors")
 const app = express();
-app.use(cors())
+app.use(cors({origin: ['https://main.d3pqawc439qb79.amplifyapp.com',
+'http://localhost:3000']}))
 app.use(express.json())
 
 app.post('/process_text', async (req, res) => {
