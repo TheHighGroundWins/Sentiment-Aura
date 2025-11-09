@@ -2,8 +2,13 @@ import React, { useEffect, useState, useRef } from 'react'
 
 const KeywordsDisplay = ({keywords}: {keywords: String[]}) => {
 
-  const[loaded, reload] = useState(String);
-  const containerRef = useRef(null);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.scrollLeft = ref.current.scrollWidth;
+    }
+  },[keywords]);
 
   function hashArray(arr: any[]): string {
   let hash = 0x811c9dc5;
@@ -17,7 +22,9 @@ const KeywordsDisplay = ({keywords}: {keywords: String[]}) => {
 
 
   return (
-    <div className={`flex gap-2 ${keywords.length > 0 ? "opacity-80":"opacity-0"} backdrop-blur-xl rounded-full bg-[#33415566] p-4`} key={hashArray(keywords)}>
+    <div ref={ref} style={{width:'600px', height:'60px', overflow: 'hidden'}} className={`flex gap-2 ${keywords.length > 0 ? "opacity-80":"opacity-0"} justify-center 
+      [scrollbar-width:none] [&::-webkit-scrollbar]:hidden overflow-x-scroll scroll-smooth
+     backdrop-blur-xl rounded-full bg-[#33415566] p-4`} key={hashArray(keywords)}>
     {[...keywords].map((word, i) => (<h2 key={i} className='animate-FadeIn'
     style={{animationIterationCount: 1, animationFillMode: "both", animationDelay: `${i*0.05}s`, animationDuration: '2s'}}>{word}</h2>))}
     </div>

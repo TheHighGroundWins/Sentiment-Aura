@@ -2,30 +2,52 @@
 import TranscriptDisplay from './TranscriptDisplay'
 import KeywordsDisplay from './KeywordsDisplay'
 import Controls from './Controls'
-import AudioVisual from './AudioVisual'
-import React, {useState} from 'react'
+import React, {useEffect, useState} from 'react'
 import axios from 'axios'
 import { sentimentData } from './AudioVisual'
+import dynamic from 'next/dynamic'
+
+export interface Transcript {
+    text: string,
+    is_final: boolean,
+  }
+
+const AudioVisual = dynamic(() => import("./AudioVisual"), {
+  ssr: false,
+});
+
+function hashArray(arr: any[]): string {
+  let hash = 0x811c9dc5;
+  const str = JSON.stringify(arr);
+  for (let i = 0; i < str.length; i++) {
+    hash ^= str.charCodeAt(i);
+    hash = (hash * 0x01000193) >>> 0;
+  }
+  return hash.toString(36);
+}
 
 const UIOverlay = () => {
 
   const[keywordList, setKeywords] = useState([""]);
-  const [words, setWords] = useState<string[]>([]);
-  const [transcript, setTranscript] = useState("");
-  const [sentiments, setSentiments] = useState<sentimentData>(null);
+  const [transcript, setTranscript] = useState<Transcript>({text:"", is_final: false});
+  const [sentiments, setSentiments] = useState<sentimentData>({happy: 0,
+    sad: 0,
+    angry: 0,
+    surprised: 0,
+    arousal: 0,
+    valence: 0});
 
-  const updateKeywords = () => {
-      setKeywords(words)
+  useEffect(() => {
+    if (transcript.text && transcript.is_final) {
+      callServer();
     }
-
-  const inputKeywords = (e: React.ChangeEvent<HTMLInputElement>) => {
-      setWords(e.target.value.split(""))
-    }
+  },[transcript.text, transcript.is_final]);
 
   const callServer = async () => {
+    
     const response = await axios.post('http://localhost:3001/process_text',
       {
-        message: 'sentimental analysis (scale 0-10, happy, sad, angry, surprised, arousal, valence) and keywords, give pure JSON Data: Interviewee: Yeah, sure. So, um, I was living in, uh, London at the time. (2:15 – noise from passing ambulance) It was, uh, quite a harrowing period, you know? The air raids, they were, uh, relentless. (4:45 – pause due to emotional recollection) I remember one night, the, um, sirens blaring, and we rushed to the, uh, bomb shelter. The fear, it’s hard to, um, put into words.'
+        message: `sentimental analysis (scale 0-10 happy, sad, angry, surprised, arousal, valence(binary value of -1 or 1)) and keywords (5 maximum), give pure JSON Data: ${transcript.text}`
       },
       {
         headers: {
@@ -33,20 +55,24 @@ const UIOverlay = () => {
         }
       }
     );
-    
+
+    console.log(response)
+
     setSentiments(response.data["sentimental_analysis"]);
     setKeywords(response.data["keywords"]);
+    
   };
+  
 
   return (
     <div className='relative'>
-        <AudioVisual sentiments={sentiments}/>
+        <AudioVisual key = {hashArray(keywordList)} sentiments={sentiments}/>
+        
         <div className='absolute inset-0 top-1/2 flex flex-col text-2xl gap-4 justify-center items-center'>
             
             <TranscriptDisplay transcript={transcript}/>
             <KeywordsDisplay keywords={keywordList}/>
             <Controls setTranscript={setTranscript}/>
-            <input onChange={inputKeywords}></input>
             <button onClick={callServer}>button</button>
         </div>
     </div>

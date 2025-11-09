@@ -1,15 +1,9 @@
 require("dotenv").config();
 const express = require('express');
 const cors = require("cors")
-const HOST = 'localhost';
-const PORT = 3001;
 const app = express();
 app.use(cors())
 app.use(express.json())
-
-app.get('/', (req, res) => {
-    res.json({ status: 'Server is running!' });
-});
 
 app.post('/process_text', async (req, res) => {
     
@@ -49,7 +43,6 @@ app.post('/process_text', async (req, res) => {
         const cleanedData = aiTextResponse.replace(/```json\n?/g, '')
                                             .replace(/```\n?/g, '')
                                             .trim();
-        console.log(cleanedData)
         const processedData = JSON.parse(cleanedData)
         res.json(processedData);
     } catch (parseError) {

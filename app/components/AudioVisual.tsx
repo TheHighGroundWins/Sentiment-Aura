@@ -11,51 +11,83 @@ export interface sentimentData {
     valence: number
 }
 
-function emotionToHSV(value: number, min=0,max=10) {
-    const normalized = (value - min) / (max - min);
+function emotionToHSV(happy: number, sad: number, angry: number, min=0,max=10) {
+  //normalize emotion ranges
+  const h = (happy - min) / (max - min);
+  const s = (sad - min) / (max - min);
+  const a = (angry - min) / (max - min);
+  const happyB = 60;
+  const sadB = 180;
+  const angryB = 270;
+  const happyScale = 60;
+  const angryScale = 90;
   
-  let hue;
-  if (normalized < 0.5) {
-    // 0 to 0.5: Blue (240°) → Cyan (180°)
-    hue = 240 - (normalized * 2 * 60);
-  } else {
-    // 0.5 to 1: Yellow (60°) → Red (0°)
-    hue = 60 - ((normalized - 0.5) * 2 * 60);
+  //get the total to be compared against
+  const total = h + s + a;
+  
+  if (total === 0) return 180;
+  
+  //scale to HSV values
+  const happyHue = happyB + (h * happyScale);
+  const sadHue = sadB + (s * happyScale);
+  const angryHue = angryB + (a * angryScale);
+  
+  //calculate relative weights
+  const happyWeight = h / total;
+  const sadWeight = s / total;
+  const angryWeight = a / total;
+  
+  //get final hue
+  let hue = (happyHue * happyWeight) + 
+            (sadHue * sadWeight) + 
+            (angryHue * angryWeight);
+  
+  //if over limit set to red.
+  if (angryWeight > 0.5 && hue > 300) {
+    hue = hue % 360;
   }
-
-  return hue;
+  
+  return Math.round(hue);
 }
 
 export default function AudioVisual({sentiments}: {sentiments: sentimentData}) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const p5Instance = useRef<p5 | null>(null);
+  const sentimentRef = useRef(sentiments);
+
+  useEffect(() => {
+    sentimentRef.current = sentiments;
+  }, [sentiments]);
   
   useEffect(() => {
-    if (!containerRef.current) return;
-
-    import("p5").then((p5Mod)=>{
-    const p5 = p5Mod.default;
+    if (p5Instance.current || !containerRef.current) return;
 
     const particleNum = 500;
 
     let delta = 0;
     let baseHue: number[] = [];
-    let hueRange: number[] = [];
-    let baseSat = [100, 100, 100];
-    let satRange = 0;
+    let hueRange = 10;
+    let baseSat: number[] = [];
+    let satRange = 10;
     let scale = 3;
     let noiseScale = 0.002;
     let brightness = 100;
+    const colorRange = 30;
+    const valenceScale = 30;
+    const arousalScale = 10;
 
-    if(sentiments==null) {
-      return
-    }
+    if(sentiments == null)
+      return;
+    hueRange = sentiments.arousal;
 
-    for (let impact = 0; impact < (sentiments.arousal/2); impact++) {
-      baseHue.push(emotionToHSV(sentiments.happy-sentiments.sad+sentiments.angry)+50*impact);
-      baseSat.push(100);
+
+    for (let impact = 0; impact < (sentiments.surprised/2); impact++) {
+      baseHue.push(emotionToHSV(sentiments.happy,sentiments.sad,sentiments.angry)+colorRange*impact);
+      const arousal = sentiments.arousal*arousalScale - sentiments.valence *valenceScale;
+      baseSat.push(arousal);
     }
     
-    let speed = 2;
+    let speed = sentiments.arousal/2;
     const offset = {x:1000, y:1000}
     type particle= {x: number, y: number};
     let particles: particle[][] = Array.from({length: baseHue.length}, () => []);
@@ -143,18 +175,16 @@ export default function AudioVisual({sentiments}: {sentiments: sentimentData}) {
     }
     };
 
-    
-
-    const canvas = new p5(sketch, containerRef.current!);
-  
+    p5Instance.current = new p5(sketch, containerRef.current);
   
 
     // Clean up on unmount
     return () => {
-      canvas.remove();
-    };});
+      p5Instance.current?.remove();
+      p5Instance.current= null
+    };
+  },[]);
     
-  }, [sentiments]);
 
   return (
     <div className="border border-gray-400" ref={containerRef}></div>

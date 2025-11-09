@@ -1,18 +1,20 @@
 "use client"
-import React, { useRef, useState } from 'react'
-import getAccess from './Transcriber';
+import React, { useState, useRef } from 'react'
+import { Transcript } from './UIOverlay';
 
 
-const Controls = ({setTranscript}:{ setTranscript: React.Dispatch<React.SetStateAction<string>>;}) => {
-    const[clicked, setClicked] = useState(false);
-    const[recording, setRecording] = useState(false);
-    let transcript = "";
-    const socketRef = useRef<WebSocket | null>(null);
-    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-    const streamRef = useRef<MediaStream | null>(null);
+const Controls = ({setTranscript}:{ setTranscript: React.Dispatch<React.SetStateAction<Transcript>>}) => {
+  const[clicked, setClicked] = useState(false);
+  const [recording, setRecording] = useState(false);
 
-    const getAccess = async () => {
-    
+  const socketRef = useRef<WebSocket | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  const getAccess = async ({setTranscript, recording, setRecording}: 
+  {setTranscript: React.Dispatch<React.SetStateAction<Transcript>>, 
+    recording: boolean, setRecording: React.Dispatch<React.SetStateAction<boolean>>}) => {
+
     //stop all connections
     if (recording) {
       mediaRecorderRef.current?.stop();
@@ -25,7 +27,8 @@ const Controls = ({setTranscript}:{ setTranscript: React.Dispatch<React.SetState
       const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
       mediaRecorderRef.current = mediaRecorder;
       
-      const socket = new WebSocket('wss://api.deepgram.com/v1/listen?model=nova-3', [ 'token', "6b47de4ae6459958453c9fbaf13b448d4a992812" ]);
+      const socket = new WebSocket(`wss://api.deepgram.com/v1/listen?model=nova-3`
+        , [ 'token', "6b47de4ae6459958453c9fbaf13b448d4a992812" ]);
       socket.onopen = () => {
       mediaRecorder.addEventListener('dataavailable', (event) => {
         if (socket.readyState === WebSocket.OPEN) {
@@ -38,22 +41,24 @@ const Controls = ({setTranscript}:{ setTranscript: React.Dispatch<React.SetState
         const received = JSON.parse(message.data);
 
         const result = received.channel?.alternatives[0]?.transcript;
-          if (result) {
-            setTranscript((prev: string) => prev+" "+result);
-          }
-        };
+        if (result) {
+          setTranscript(prev => ({text: prev.text+" "+result, is_final: received.is_final}));
+        }
+
+      };
         setRecording(true)
       } catch(err) {
-        setTranscript("Failed to start transcription: "+err);
+        setTranscript({text: "Failed to start transcription: "+err, is_final: false});
       }
       }
     }
 
-    const startStop = () => {
-      setClicked(!clicked);
-      setTimeout(() => setClicked(false), 300)
-      getAccess()
-    }
+  const startStop = () => {
+    setClicked(!clicked);
+    setTimeout(() => setClicked(false), 300)
+    getAccess({setTranscript, recording, setRecording})
+  }
+
   return (
     <div className='flex gap-4 items-center'>
     <button className={`border-2 transition-colors duration-300 ease-in-out bg-black ${clicked ? "text-black bg-white" : "text-white"}`} onClick={startStop}>Start/Stop</button>
