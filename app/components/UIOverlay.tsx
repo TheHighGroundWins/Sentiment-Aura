@@ -3,9 +3,9 @@ import TranscriptDisplay from './TranscriptDisplay'
 import KeywordsDisplay from './KeywordsDisplay'
 import Controls from './Controls'
 import React, {useEffect, useState} from 'react'
-import axios from 'axios'
 import { sentimentData } from './AudioVisual'
 import dynamic from 'next/dynamic'
+import { processText } from '../actions/processText'
 
 export interface Transcript {
     text: string,
@@ -45,18 +45,7 @@ const UIOverlay = () => {
 
   const callServer = async () => {
     
-    const response = await axios.post('http://ec2-18-223-235-254.us-east-2.compute.amazonaws.com:3001/process_text',
-      {
-        message: `sentimental analysis (scale 0-10 happy, sad, angry, surprised, arousal, valence(binary value of -1 or 1)) and keywords (5 maximum), give pure JSON Data: ${transcript.text}`
-      },
-      {
-        headers: {
-            'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    console.log(response)
+    const response = await processText({transcript});
 
     setSentiments(response.data["sentimental_analysis"]);
     setKeywords(response.data["keywords"]);
